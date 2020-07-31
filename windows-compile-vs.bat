@@ -160,6 +160,7 @@ call :pm-echo "Compiling"
 msbuild ALL_BUILD.vcxproj /p:Configuration=RelWithDebInfo /m >>"%log_file%" 2>&1 || exit 1
 call :pm-echo "Installing files..."
 msbuild INSTALL.vcxproj /p:Configuration=RelWithDebInfo >>"%log_file%" 2>&1 || exit 1
+copy RelWithDebInfo\leveldb.pdb "%DEPS_DIR%\bin\leveldb.pdb" >>"%log_file%" 2>&1 || exit 1
 
 cd /D "%DEPS_DIR%"
 
