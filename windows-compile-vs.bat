@@ -159,7 +159,7 @@ cmake -G "%CMAKE_TARGET%" -A "%ARCH%"^
 call :pm-echo "Compiling"
 msbuild ALL_BUILD.vcxproj /p:Configuration=RelWithDebInfo /m >>"%log_file%" 2>&1 || exit 1
 call :pm-echo "Installing files..."
-msbuild INSTALL.vcxproj >>"%log_file%" 2>&1 || exit 1
+msbuild INSTALL.vcxproj /p:Configuration=RelWithDebInfo >>"%log_file%" 2>&1 || exit 1
 
 cd /D "%DEPS_DIR%"
 
