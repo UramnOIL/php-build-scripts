@@ -327,7 +327,6 @@ if exist "C:\Program Files (x86)\Microsoft Visual Studio\%~1" (
     call :pm-echo "Found Visual Studio %~1"
     exit /B 0
 ) else (
-    call :pm-echo "DID NOT FIND VS %~1"
     set VS_VER=
     set VS_YEAR=
     exit /B 1
