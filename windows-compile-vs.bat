@@ -2,9 +2,9 @@
 
 REM For future users: This file MUST have CRLF line endings. If it doesn't, lots of inexplicable undesirable strange behaviour will result.
 REM Also: Don't modify this version with sed, or it will screw up your line endings.
-set PHP_MAJOR_VER=7.4
-set PHP_VER=%PHP_MAJOR_VER%.7
-set PHP_IS_BETA=no
+set PHP_MAJOR_VER=7.3
+set PHP_VER=%PHP_MAJOR_VER%.19
+set PHP_IS_BETA="no"
 set PHP_SDK_VER=2.2.0
 set PATH=C:\Program Files\7-Zip;C:\Program Files (x86)\GnuWin32\bin;%PATH%
 set VC_VER=vc15
@@ -18,13 +18,13 @@ set LIBYAML_VER=0.2.4
 set PTHREAD_W32_VER=3.0.0
 set LEVELDB_MCPE_VER=10f59b56bec1db3ffe42ff265afe22182073e0e2
 
-set PHP_PTHREADS_VER=e2591d2a4177de20247d7623dbee02ef8a916138
+set PHP_PTHREADS_VER=0e2d93d166afafa100db39c69f8a919fa1b1134d
 set PHP_YAML_VER=2.1.0
-set PHP_POCKETMINE_CHUNKUTILS_VER=master
+set PHP_CHUNKUTILS2_VER=318b63b48f6b557f34795eabcebced2bf767a1f0
 set PHP_IGBINARY_VER=3.1.2
 REM this is 1.2.9 but tags with a "v" prefix are a pain in the ass
 set PHP_DS_VER=2ddef84d3e9391c37599cb716592184315e23921
-set PHP_LEVELDB_VER=f4ed9f57ee99ddbfe86439fb361cf52cc9676225
+set PHP_LEVELDB_VER=9bcae79f71b81a5c3ea6f67e45ae9ae9fb2775a5
 set PHP_CRYPTO_VER=5f26ac91b0ba96742cc6284cd00f8db69c3788b2
 set PHP_RECURSIONGUARD_VER=d6ed5da49178762ed81dc0184cd34ff4d3254720
 
@@ -165,7 +165,7 @@ cd /D php-src\ext
 
 call :get-extension-zip-from-github "pthreads"              "%PHP_PTHREADS_VER%"              "pmmp"     "pthreads"                || exit 1
 call :get-extension-zip-from-github "yaml"                  "%PHP_YAML_VER%"                  "php"      "pecl-file_formats-yaml"  || exit 1
-call :get-extension-zip-from-github "pocketmine_chunkutils" "%PHP_POCKETMINE_CHUNKUTILS_VER%" "dktapps"  "PocketMine-C-ChunkUtils" || exit 1
+call :get-extension-zip-from-github "chunkutils2"           "%PHP_CHUNKUTILS2_VER%"           "pmmp"     "ext-chunkutils2"         || exit 1
 call :get-extension-zip-from-github "igbinary"              "%PHP_IGBINARY_VER%"              "igbinary" "igbinary"                || exit 1
 call :get-extension-zip-from-github "ds"                    "%PHP_DS_VER%"                    "php-ds"   "ext-ds"                  || exit 1
 call :get-extension-zip-from-github "leveldb"               "%PHP_LEVELDB_VER%"               "reeze"    "php-leveldb"             || exit 1
@@ -196,6 +196,7 @@ call configure^
  --enable-pdo^
  --enable-bcmath^
  --enable-calendar^
+ --enable-chunkutils2=shared^
  --enable-com-dotnet^
  --enable-ctype^
  --enable-ds=shared^
@@ -206,7 +207,6 @@ call configure^
  --enable-mbstring^
  --enable-opcache^
  --enable-phar^
- --enable-pocketmine-chunkutils=shared^
  --enable-recursionguard=shared^
  --enable-sockets^
  --enable-tokenizer^
@@ -269,7 +269,7 @@ call :pm-echo "Generating php.ini..."
 (echo extension_dir=ext)>>"%php_ini%"
 (echo extension=php_pthreads.dll)>>"%php_ini%"
 (echo extension=php_openssl.dll)>>"%php_ini%"
-(echo extension=php_pocketmine_chunkutils.dll)>>"%php_ini%"
+(echo extension=php_chunkutils2.dll)>>"%php_ini%"
 (echo extension=php_igbinary.dll)>>"%php_ini%"
 (echo extension=php_ds.dll)>>"%php_ini%"
 (echo extension=php_leveldb.dll)>>"%php_ini%"

@@ -1,5 +1,5 @@
 #!/bin/bash
-[ -z "$PHP_VERSION" ] && PHP_VERSION="7.4.7"
+[ -z "$PHP_VERSION" ] && PHP_VERSION="7.3.19"
 
 ZLIB_VERSION="1.2.11"
 GMP_VERSION="6.2.0"
@@ -12,12 +12,11 @@ LIBPNG_VERSION="1.6.37"
 LIBJPEG_VERSION="9d"
 OPENSSL_VERSION="1.1.1g"
 LIBZIP_VERSION="1.6.1"
-SQLITE3_VERSION="3320200" #3.32.2
 
-EXT_PTHREADS_VERSION="e2591d2a4177de20247d7623dbee02ef8a916138"
+EXT_PTHREADS_VERSION="0e2d93d166afafa100db39c69f8a919fa1b1134d"
 EXT_YAML_VERSION="2.1.0"
-EXT_LEVELDB_VERSION="f4ed9f57ee99ddbfe86439fb361cf52cc9676225"
-EXT_POCKETMINE_CHUNKUTILS_VERSION="master"
+EXT_LEVELDB_VERSION="9bcae79f71b81a5c3ea6f67e45ae9ae9fb2775a5"
+EXT_CHUNKUTILS2_VERSION="318b63b48f6b557f34795eabcebced2bf767a1f0"
 EXT_XDEBUG_VERSION="2.9.5"
 EXT_IGBINARY_VERSION="3.1.2"
 EXT_DS_VERSION="2ddef84d3e9391c37599cb716592184315e23921"
@@ -39,7 +38,7 @@ date > "$DIR/install.log" 2>&1
 uname -a >> "$DIR/install.log" 2>&1
 echo "[INFO] Checking dependencies"
 
-COMPILE_SH_DEPENDENCIES=( make autoconf automake m4 getconf gzip bzip2 bison g++ git cmake pkg-config re2c)
+COMPILE_SH_DEPENDENCIES=( make autoconf automake m4 getconf gzip bzip2 bison g++ git cmake pkg-config)
 ERRORS=0
 for(( i=0; i<${#COMPILE_SH_DEPENDENCIES[@]}; i++ ))
 do
@@ -106,17 +105,15 @@ OPTIMIZE_TARGET=""
 DO_STATIC="no"
 DO_CLEANUP="yes"
 COMPILE_DEBUG="no"
-COMPILE_LEVELDB="no"
 HAVE_VALGRIND="--without-valgrind"
 HAVE_OPCACHE="yes"
 FLAGS_LTO=""
 
 LD_PRELOAD=""
 
-COMPILE_POCKETMINE_CHUNKUTILS="no"
 COMPILE_GD="no"
 
-while getopts "::t:j:srdlxff:ugnv" OPTION; do
+while getopts "::t:j:srdxff:gnv" OPTION; do
 
 	case $OPTION in
 		t)
@@ -142,10 +139,6 @@ while getopts "::t:j:srdlxff:ugnv" OPTION; do
 			echo "[opt] Doing cross-compile"
 			IS_CROSSCOMPILE="yes"
 			;;
-		l)
-			echo "[opt] Will compile with LevelDB support"
-			COMPILE_LEVELDB="yes"
-			;;
 		s)
 			echo "[opt] Will compile everything statically"
 			DO_STATIC="yes"
@@ -155,10 +148,6 @@ while getopts "::t:j:srdlxff:ugnv" OPTION; do
 			echo "[opt] Enabling abusive optimizations..."
 			DO_OPTIMIZE="yes"
 			OPTIMIZE_TARGET="$OPTARG"
-			;;
-		u)
-			echo "[opt] Will compile with PocketMine-ChunkUtils C extension for Anvil"
-			COMPILE_POCKETMINE_CHUNKUTILS="yes"
 			;;
 		g)
 			echo "[opt] Will enable GD2"
@@ -543,31 +532,29 @@ make install >> "$DIR/install.log" 2>&1
 cd ..
 echo " done!"
 
-if [ "$COMPILE_LEVELDB" == "yes" ]; then
-	#LevelDB
-	echo -n "[LevelDB] downloading $LEVELDB_VERSION..."
-	download_file "https://github.com/pmmp/leveldb-mcpe/archive/$LEVELDB_VERSION.tar.gz" | tar -zx >> "$DIR/install.log" 2>&1
-	#download_file "https://github.com/Mojang/leveldb-mcpe/archive/$LEVELDB_VERSION.tar.gz" | tar -zx >> "$DIR/install.log" 2>&1
-	mv leveldb-mcpe-$LEVELDB_VERSION leveldb
-	echo -n " checking..."
-	cd leveldb
-	echo -n " compiling..."
-	if [ "$DO_STATIC" == "yes" ]; then
-		LEVELDB_TARGET="staticlibs"
-	else
-		LEVELDB_TARGET="sharedlibs"
-	fi
-	INSTALL_PATH="$DIR/bin/php7/lib" CFLAGS="$CFLAGS -I$DIR/bin/php7/include" CXXFLAGS="$CXXFLAGS -I$DIR/bin/php7/include" LDFLAGS="$LDFLAGS -L$DIR/bin/php7/lib" make $LEVELDB_TARGET -j $THREADS >> "$DIR/install.log" 2>&1
-	echo -n " installing..."
-	if [ "$DO_STATIC" == "yes" ]; then
-		cp out-static/lib*.a "$DIR/bin/php7/lib/"
-	else
-		cp out-shared/libleveldb.* "$DIR/bin/php7/lib/"
-	fi
-	cp -r include/leveldb "$DIR/bin/php7/include/leveldb"
-	cd ..
-	echo " done!"
+#LevelDB
+echo -n "[LevelDB] downloading $LEVELDB_VERSION..."
+download_file "https://github.com/pmmp/leveldb-mcpe/archive/$LEVELDB_VERSION.tar.gz" | tar -zx >> "$DIR/install.log" 2>&1
+#download_file "https://github.com/Mojang/leveldb-mcpe/archive/$LEVELDB_VERSION.tar.gz" | tar -zx >> "$DIR/install.log" 2>&1
+mv leveldb-mcpe-$LEVELDB_VERSION leveldb
+echo -n " checking..."
+cd leveldb
+echo -n " compiling..."
+if [ "$DO_STATIC" == "yes" ]; then
+	LEVELDB_TARGET="staticlibs"
+else
+	LEVELDB_TARGET="sharedlibs"
 fi
+INSTALL_PATH="$DIR/bin/php7/lib" CFLAGS="$CFLAGS -I$DIR/bin/php7/include" CXXFLAGS="$CXXFLAGS -I$DIR/bin/php7/include" LDFLAGS="$LDFLAGS -L$DIR/bin/php7/lib" make $LEVELDB_TARGET -j $THREADS >> "$DIR/install.log" 2>&1
+echo -n " installing..."
+if [ "$DO_STATIC" == "yes" ]; then
+	cp out-static/lib*.a "$DIR/bin/php7/lib/"
+else
+	cp out-shared/libleveldb.* "$DIR/bin/php7/lib/"
+fi
+cp -r include/leveldb "$DIR/bin/php7/include/leveldb"
+cd ..
+echo " done!"
 
 if [ "$DO_STATIC" == "yes" ]; then
 	EXTRA_FLAGS="--enable-shared=no --enable-static=yes"
@@ -633,6 +620,7 @@ sed -i.bak 's{libtoolize --version{"$LIBTOOLIZE" --version{' autogen.sh #needed 
 ./autogen.sh --prefix="$DIR/bin/php7" \
 	--without-iconv \
 	--without-python \
+	--without-lzma \
 	--with-zlib="$DIR/bin/php7" \
 	--config-cache \
 	$EXTRA_FLAGS \
@@ -663,22 +651,6 @@ make install >> "$DIR/install.log" 2>&1
 cd ..
 echo " done!"
 
-#sqlite3
-echo -n "[sqlite3] downloading $SQLITE3_VERSION..."
-download_file "https://www.sqlite.org/2020/sqlite-autoconf-$SQLITE3_VERSION.tar.gz" | tar -zx >> "$DIR/install.log" 2>&1
-mv sqlite-autoconf-$SQLITE3_VERSION sqlite3 >> "$DIR/install.log" 2>&1
-echo -n " checking"
-cd sqlite3
-LDFLAGS="$LDFLAGS -L${DIR}/bin/php7/lib" CPPFLAGS="$CPPFLAGS -I${DIR}/bin/php7/include" RANLIB=$RANLIB ./configure \
---prefix="$DIR/bin/php7" \
-$EXTRA_FLAGS \
-$CONFIGURE_FLAGS >> "$DIR/install.log" 2>&1
-echo -n " compiling..."
-make -j $THREADS >> "$DIR/install.log" 2>&1
-echo -n " installing..."
-make install >> "$DIR/install.log" 2>&1
-cd ..
-echo " done!"
 
 
 # PECL libraries
@@ -743,20 +715,9 @@ git submodule update --init --recursive >> "$DIR/install.log" 2>&1
 cd "$DIR/install_data"
 echo " done!"
 
-if [ "$COMPILE_LEVELDB" == "yes" ]; then
-	#PHP LevelDB
-	get_github_extension "leveldb" "$EXT_LEVELDB_VERSION" "reeze" "php-leveldb"
-	HAS_LEVELDB=--with-leveldb="$DIR/bin/php7"
-else
-	HAS_LEVELDB=""
-fi
+get_github_extension "leveldb" "$EXT_LEVELDB_VERSION" "reeze" "php-leveldb"
 
-if [ "$COMPILE_POCKETMINE_CHUNKUTILS" == "yes" ]; then
-	get_github_extension "pocketmine-chunkutils" "$EXT_POCKETMINE_CHUNKUTILS_VERSION" "dktapps" "PocketMine-C-ChunkUtils"
-	HAS_POCKETMINE_CHUNKUTILS=--enable-pocketmine-chunkutils
-else
-	HAS_POCKETMINE_CHUNKUTILS=""
-fi
+get_github_extension "chunkutils2" "$EXT_CHUNKUTILS2_VERSION" "pmmp" "ext-chunkutils2"
 
 
 echo -n "[PHP]"
@@ -834,27 +795,26 @@ fi
 
 RANLIB=$RANLIB CFLAGS="$CFLAGS $FLAGS_LTO" CXXFLAGS="$CXXFLAGS $FLAGS_LTO" LDFLAGS="$LDFLAGS $FLAGS_LTO" ./configure $PHP_OPTIMIZATION --prefix="$DIR/bin/php7" \
 --exec-prefix="$DIR/bin/php7" \
---with-curl \
---with-zlib \
---with-zlib \
---with-gmp \
---with-yaml \
---with-openssl \
---with-zip \
+--with-curl="$DIR/bin/php7" \
+--with-zlib="$DIR/bin/php7" \
+--with-zlib-dir="$DIR/bin/php7" \
+--with-gmp="$DIR/bin/php7" \
+--with-yaml="$DIR/bin/php7" \
+--with-openssl="$DIR/bin/php7" \
+--with-libzip="$DIR/bin/php7" \
 $HAS_LIBPNG \
 $HAS_LIBJPEG \
 $HAS_GD \
 $HAVE_READLINE \
-$HAS_LEVELDB \
+--with-leveldb="$DIR/bin/php7" \
 $HAS_PROFILER \
 $HAS_DEBUG \
-$HAS_POCKETMINE_CHUNKUTILS \
+--enable-chunkutils2 \
 --enable-mbstring \
---disable-mbregex \
 --enable-calendar \
 --enable-pthreads \
 --disable-fileinfo \
---with-libxml \
+--with-libxml-dir="$DIR/bin/php7" \
 --enable-xml \
 --enable-dom \
 --enable-simplexml \
@@ -880,6 +840,7 @@ $HAVE_PCNTL \
 $HAVE_MYSQLI \
 --enable-bcmath \
 --enable-cli \
+--enable-zip \
 --enable-ftp \
 --enable-opcache=$HAVE_OPCACHE \
 --enable-igbinary \
@@ -895,7 +856,7 @@ fi
 sed -i=".backup" 's/PHP_BINARIES. pharcmd$/PHP_BINARIES)/g' Makefile
 sed -i=".backup" 's/install-programs install-pharcmd$/install-programs/g' Makefile
 
-if [[ "$COMPILE_LEVELDB" == "yes" ]] && [[ "$DO_STATIC" == "yes" ]]; then
+if [[ "$DO_STATIC" == "yes" ]]; then
 	sed -i=".backup" 's/--mode=link $(CC)/--mode=link $(CXX)/g' Makefile
 fi
 
