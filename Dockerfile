@@ -14,10 +14,8 @@ RUN apt-get -y update && apt-get install -y \
     g++ \
     libtool-bin
 
-RUN git clone https://github.com/pmmp/php-build-scripts.git
+WORKDIR /build
 
-WORKDIR /php-build-scripts
-
-RUN git checkout php/7.4
+COPY compile.sh /build
 
 RUN ./compile.sh

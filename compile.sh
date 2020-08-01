@@ -1,23 +1,24 @@
 #!/bin/bash
-[ -z "$PHP_VERSION" ] && PHP_VERSION="7.3.19"
+[ -z "$PHP_VERSION" ] && PHP_VERSION="7.4.7"
 
 ZLIB_VERSION="1.2.11"
 GMP_VERSION="6.2.0"
-CURL_VERSION="curl-7_70_0"
+CURL_VERSION="curl-7_71_1"
 READLINE_VERSION="6.3"
-YAML_VERSION="0.2.4"
+YAML_VERSION="0.2.5"
 LEVELDB_VERSION="10f59b56bec1db3ffe42ff265afe22182073e0e2"
 LIBXML_VERSION="2.9.10"
 LIBPNG_VERSION="1.6.37"
 LIBJPEG_VERSION="9d"
 OPENSSL_VERSION="1.1.1g"
-LIBZIP_VERSION="1.6.1"
+LIBZIP_VERSION="1.7.3"
+SQLITE3_VERSION="3320200" #3.32.2
 
-EXT_PTHREADS_VERSION="0e2d93d166afafa100db39c69f8a919fa1b1134d"
+EXT_PTHREADS_VERSION="40ab4e9eea0c33160895e575be70243e082d3d10"
 EXT_YAML_VERSION="2.1.0"
 EXT_LEVELDB_VERSION="9bcae79f71b81a5c3ea6f67e45ae9ae9fb2775a5"
 EXT_CHUNKUTILS2_VERSION="318b63b48f6b557f34795eabcebced2bf767a1f0"
-EXT_XDEBUG_VERSION="2.9.5"
+EXT_XDEBUG_VERSION="2.9.6"
 EXT_IGBINARY_VERSION="3.1.2"
 EXT_DS_VERSION="2ddef84d3e9391c37599cb716592184315e23921"
 EXT_CRYPTO_VERSION="5f26ac91b0ba96742cc6284cd00f8db69c3788b2"
@@ -38,7 +39,7 @@ date > "$DIR/install.log" 2>&1
 uname -a >> "$DIR/install.log" 2>&1
 echo "[INFO] Checking dependencies"
 
-COMPILE_SH_DEPENDENCIES=( make autoconf automake m4 getconf gzip bzip2 bison g++ git cmake pkg-config)
+COMPILE_SH_DEPENDENCIES=( make autoconf automake m4 getconf gzip bzip2 bison g++ git cmake pkg-config re2c)
 ERRORS=0
 for(( i=0; i<${#COMPILE_SH_DEPENDENCIES[@]}; i++ ))
 do
@@ -113,7 +114,7 @@ LD_PRELOAD=""
 
 COMPILE_GD="no"
 
-while getopts "::t:j:srdxff:gnv" OPTION; do
+while getopts "::t:j:srdlxff:gnv" OPTION; do
 
 	case $OPTION in
 		t)
@@ -138,6 +139,10 @@ while getopts "::t:j:srdxff:gnv" OPTION; do
 		x)
 			echo "[opt] Doing cross-compile"
 			IS_CROSSCOMPILE="yes"
+			;;
+		l)
+			echo "[opt] Will compile with LevelDB support"
+			COMPILE_LEVELDB="yes"
 			;;
 		s)
 			echo "[opt] Will compile everything statically"
@@ -651,6 +656,22 @@ make install >> "$DIR/install.log" 2>&1
 cd ..
 echo " done!"
 
+#sqlite3
+echo -n "[sqlite3] downloading $SQLITE3_VERSION..."
+download_file "https://www.sqlite.org/2020/sqlite-autoconf-$SQLITE3_VERSION.tar.gz" | tar -zx >> "$DIR/install.log" 2>&1
+mv sqlite-autoconf-$SQLITE3_VERSION sqlite3 >> "$DIR/install.log" 2>&1
+echo -n " checking"
+cd sqlite3
+LDFLAGS="$LDFLAGS -L${DIR}/bin/php7/lib" CPPFLAGS="$CPPFLAGS -I${DIR}/bin/php7/include" RANLIB=$RANLIB ./configure \
+--prefix="$DIR/bin/php7" \
+$EXTRA_FLAGS \
+$CONFIGURE_FLAGS >> "$DIR/install.log" 2>&1
+echo -n " compiling..."
+make -j $THREADS >> "$DIR/install.log" 2>&1
+echo -n " installing..."
+make install >> "$DIR/install.log" 2>&1
+cd ..
+echo " done!"
 
 
 # PECL libraries
