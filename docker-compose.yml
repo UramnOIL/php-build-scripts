@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  build:
+    volumes:
+    - ./build/:/php-build-script
+    build:
+      context: .
+      dockerfile: Dockerfile
