@@ -14,8 +14,10 @@ RUN apt-get -y update && apt-get install -y \
     g++ \
     libtool-bin
 
+WORKDIR /workspace
+
+COPY compile.sh /workspace
+
 WORKDIR /build
 
-COPY compile.sh /build
-
-RUN ./compile.sh
+CMD /workspace/compile.sh
